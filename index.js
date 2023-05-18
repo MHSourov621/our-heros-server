@@ -30,12 +30,20 @@ async function run() {
 
         const productCollection = client.db('ourHerosDb').collection('products');
 
+
+        app.get('/products', async(req, res) => {
+            const cursor = productCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+
         app.post('/products', async(req, res) => {
             const newHero = req.body;
             console.log(newHero);
             const result = await productCollection.insertOne(newHero);
             res.send(result)
         })
+
 
 
         // Send a ping to confirm a successful connection
