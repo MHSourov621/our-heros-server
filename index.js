@@ -37,16 +37,17 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/products/:category', async(req, res) => {
+        app.get('/category/:category', async(req, res) => {
             const result = await productCollection.find({ category: req.params.category }).toArray();
             res.send(result)
         })
 
-        app.get('/products/:id', async(req, res) => {
+        app.get('/products/:id', async(req, res) =>{
             const id = req.params.id;
-            const query = {_id : new ObjectId(id)};;
-            const result = await productCollection.findOne(query);
-            res.send(result);
+            const query = {_id : new ObjectId(id)}
+            const product = await productCollection.findOne(query);
+            console.log(product)
+            res.send(product)
         })
 
         app.post('/products', async(req, res) => {
