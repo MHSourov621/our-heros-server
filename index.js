@@ -30,27 +30,44 @@ async function run() {
 
         const productCollection = client.db('ourHerosDb').collection('products');
 
+        const indexKey = { productName: 1 };
 
-        app.get('/products', async(req, res) => {
+        const indexOptions = { name: "product" };
+
+        const result = await productCollection.createIndex(indexKey, indexOptions);
+
+        app.get('/searchByProductName/:text', async (req, res) => {
+            const text = req.params.text;
+            const result = await productCollection.find({
+                $or: [
+                    { productName: { $regex: text, $options: "i" } },
+                ],
+            })
+                .toArray();
+            res.send(result);
+        })
+
+
+        app.get('/products', async (req, res) => {
             const cursor = productCollection.find().limit(20);
             const result = await cursor.toArray();
             res.send(result)
         })
 
-        app.get('/category/:category', async(req, res) => {
+        app.get('/category/:category', async (req, res) => {
             const result = await productCollection.find({ category: req.params.category }).toArray();
             res.send(result)
         })
 
-        app.get('/products/:id', async(req, res) =>{
+        app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id : new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const product = await productCollection.findOne(query);
             console.log(product)
             res.send(product)
         })
 
-        app.post('/products', async(req, res) => {
+        app.post('/products', async (req, res) => {
             const newHero = req.body;
             console.log(newHero);
             const result = await productCollection.insertOne(newHero);
