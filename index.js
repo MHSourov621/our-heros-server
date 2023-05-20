@@ -45,18 +45,19 @@ async function run() {
 
         app.get('/searchByProductName/:text', async (req, res) => {
             const text = req.params.text;
+            const value = req.query.value;
             const result = await productCollection.find({
                 $or: [
                     { productName: { $regex: text, $options: "i" } },
                 ],
-            })
-                .toArray();
+            }).sort({price: value }).toArray();
             res.send(result);
         })
 
 
         app.get('/products', async (req, res) => {
-            const cursor = productCollection.find().limit(20);
+            const value = req.query.value;
+            const cursor = productCollection.find().sort({ price: value }).limit(20);
             const result = await cursor.toArray();
             res.send(result)
         })
@@ -66,8 +67,8 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/email/:email', async(req, res) => {
-            const result = await productCollection.find({email: req.params.email}).toArray();
+        app.get('/email/:email', async (req, res) => {
+            const result = await productCollection.find({ email: req.params.email }).toArray();
             res.send(result)
         })
 
@@ -86,10 +87,10 @@ async function run() {
             res.send(result)
         })
 
-        app.put('/products/:id', async(req, res) => {
+        app.put('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const filter = {_id: new ObjectId(id)};
-            const option = {upsert: true};
+            const filter = { _id: new ObjectId(id) };
+            const option = { upsert: true };
             const updatedProduct = req.body;
             const product = {
                 $set: {
@@ -103,9 +104,9 @@ async function run() {
             console.log(result);
         })
 
-        app.delete('/products/:id', async(req, res) => {
+        app.delete('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id : new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await productCollection.deleteOne(query);
             res.send(result)
         })
