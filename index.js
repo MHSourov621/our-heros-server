@@ -35,10 +35,75 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
+        const productCollection = client.db('ourHerosDb').collection('products');
+
+        app.get('/searchByProductName/:text', async (req, res) => {
+            const text = req.params.text;
+            const value = req.query.value;
+            const result = await productCollection.find({
+                $or: [
+                    { productName: { $regex: text, $options: "i" } },
+                ],
+            }).sort({ price: value }).toArray();
+            res.send(result);
+        })
 
 
+        app.get('/products', async (req, res) => {
+            const value = req.query.value;
+            const cursor = productCollection.find().sort({ price: value }).limit(20);
+            const result = await cursor.toArray();
+            res.send(result)
+        })
 
+        app.get('/category/:category', async (req, res) => {
+            const result = await productCollection.find({ category: req.params.category }).toArray();
+            res.send(result)
+        })
 
+        app.get('/email/:email', async (req, res) => {
+            const result = await productCollection.find({ email: req.params.email }).toArray();
+            res.send(result)
+        })
+
+        app.get('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const product = await productCollection.findOne(query);
+            console.log(product)
+            res.send(product)
+        })
+
+        app.post('/products', async (req, res) => {
+            const newHero = req.body;
+            console.log(newHero);
+            const result = await productCollection.insertOne(newHero);
+            res.send(result)
+        })
+
+        app.put('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const option = { upsert: true };
+            const updatedProduct = req.body;
+            const product = {
+                $set: {
+                    price: updatedProduct.price,
+                    quantity: updatedProduct.quantity,
+                    details: updatedProduct.details
+                }
+            };
+            const result = await productCollection.updateOne(filter, product, option);
+            res.send(result)
+            console.log(result);
+        })
+
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await productCollection.deleteOne(query);
+            res.send(result)
+        })
 
 
         // Send a ping to confirm a successful connection
@@ -48,80 +113,7 @@ async function run() {
         // Ensures that the client will close when you finish/error
         // await client.close();
     }
-    const productCollection = client.db('ourHerosDb').collection('products');
 
-    const indexKey = { productName: 1 };
-
-    const indexOptions = { name: "product" };
-    const result = await productCollection.createIndex(indexKey, indexOptions);
-
-    app.get('/searchByProductName/:text', async (req, res) => {
-        const text = req.params.text;
-        const value = req.query.value;
-        const result = await productCollection.find({
-            $or: [
-                { productName: { $regex: text, $options: "i" } },
-            ],
-        }).sort({ price: value }).toArray();
-        res.send(result);
-    })
-
-
-    app.get('/products', async (req, res) => {
-        const value = req.query.value;
-        const cursor = productCollection.find().sort({ price: value }).limit(20);
-        const result = await cursor.toArray();
-        res.send(result)
-    })
-
-    app.get('/category/:category', async (req, res) => {
-        const result = await productCollection.find({ category: req.params.category }).toArray();
-        res.send(result)
-    })
-
-    app.get('/email/:email', async (req, res) => {
-        const result = await productCollection.find({ email: req.params.email }).toArray();
-        res.send(result)
-    })
-
-    app.get('/products/:id', async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) }
-        const product = await productCollection.findOne(query);
-        console.log(product)
-        res.send(product)
-    })
-
-    app.post('/products', async (req, res) => {
-        const newHero = req.body;
-        console.log(newHero);
-        const result = await productCollection.insertOne(newHero);
-        res.send(result)
-    })
-
-    app.put('/products/:id', async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const option = { upsert: true };
-        const updatedProduct = req.body;
-        const product = {
-            $set: {
-                price: updatedProduct.price,
-                quantity: updatedProduct.quantity,
-                details: updatedProduct.details
-            }
-        };
-        const result = await productCollection.updateOne(filter, product, option);
-        res.send(result)
-        console.log(result);
-    })
-
-    app.delete('/products/:id', async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) };
-        const result = await productCollection.deleteOne(query);
-        res.send(result)
-    })
 }
 run().catch(console.dir);
 
